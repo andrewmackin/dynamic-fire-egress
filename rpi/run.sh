@@ -4,4 +4,4 @@ set -a
 source config.env
 set +a
 
-python app.py
+python controller.py

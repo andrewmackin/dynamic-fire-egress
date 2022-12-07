@@ -49,18 +49,9 @@ class App:
     @staticmethod
     def _shortest_path(tx, sign_id):
         query = ("MATCH path = (startSign:Sign "
-        "WHERE startSign.id = $sign_id)-[:CONNECTED_TO*]-(exit:Exit) "
+        "WHERE startSign.id = $sign_id)-[:CONNECTED_TO*]->(exit:Exit) "
         "WHERE NONE(x in nodes(path) WHERE x:Fire) RETURN path ORDER BY "
         "REDUCE(dist = 0, rela in relationships(path) | dist + rela.cost) "
         "ASC LIMIT 1")
         result = tx.run(query, sign_id = sign_id)
         return result.data()
-
-
-if __name__ == "__main__":
-    uri = os.environ.get('NEO4J_URI')
-    user = os.environ.get('NEO4J_USERNAME')
-    password = os.environ.get('NEO4J_PASSWORD')
-    app = App(uri, user, password)
-    app.init_db()
-    app.close()
