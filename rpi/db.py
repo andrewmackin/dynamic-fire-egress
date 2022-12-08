@@ -24,6 +24,10 @@ class App:
         with self.driver.session(database="neo4j") as session:
             return session.execute_write(self._update_delta, alarm_id)
 
+    def set_direction(self, sign_id, dir):
+        with self.driver.session(database="neo4j") as session:
+            return session.execute_write(self._set_dir, sign_id, dir)
+
     def shortest_path(self, sign_id):
         with self.driver.session(database="neo4j") as session:
             return session.execute_read(self._shortest_path, sign_id)
@@ -47,6 +51,12 @@ class App:
         return result.data()
 
     @staticmethod
+    def _set_dir(tx, sign_id, dir):
+        query = "MATCH (n:Sign WHERE n.id = $sign_id) SET n.dir = $dir RETURN n"
+        result = tx.run(query, sign_id = sign_id, dir = dir)
+        return result.data()
+
+    @staticmethod
     def _shortest_path(tx, sign_id):
         query = ("MATCH path = (startSign:Sign "
         "WHERE startSign.id = $sign_id)-[:CONNECTED_TO*]->(exit:Exit) "
@@ -55,3 +65,4 @@ class App:
         "ASC LIMIT 1")
         result = tx.run(query, sign_id = sign_id)
         return result.data()
+
