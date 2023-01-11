@@ -19,6 +19,10 @@ class App:
     def get_sign_ids(self):
         with self.driver.session(database="neo4j") as session:
             return session.execute_read(self._get_sign_ids)
+    
+    def get_exit_ids(self):
+        with self.driver.session(database="neo4j") as session:
+            return session.execute_read(self._get_exit_ids)
 
     def set_fire(self, alarm_id):
         with self.driver.session(database="neo4j") as session:
@@ -41,6 +45,11 @@ class App:
     def _get_sign_ids(tx):
         result = tx.run("MATCH (n:Sign) WHERE NOT (n:Exit) RETURN n")
         return [row['n']['id'] for row in result.data()]
+
+    @staticmethod
+    def _get_exit_ids(tx):
+        result = tx.run("MATCH (n:Exit:Sign) RETURN n")
+        return [row['n'] for row in result.data()]
 
     @staticmethod
     def _update_delta(tx, alarm_id):

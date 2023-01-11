@@ -4,7 +4,7 @@ from db import App
 import RPi.GPIO as GPIO
 import pygame
 from pygame.locals import *
-# TODO: integrate with api
+import paho.mqtt.client as mqtt
 
 pygame.init()
 pygame.display.init()
@@ -19,29 +19,49 @@ screen = pygame.display.set_mode(size)
 left_history = []
 right_history = []
 
+uri = os.environ.get('NEO4J_URI')
+user = os.environ.get('NEO4J_USERNAME')
+password = os.environ.get('NEO4J_PASSWORD')
+app = App(uri, user, password)
+app.init_db()
+
+
+SENSORS = {'sensor1':6, 'sensor2': 7, 'sensor3': 5}
+HEAT_THRESH = 23
+mqtt_broker_ip = "10.49.242.163"
+
+client = mqtt.Client()
+
 def add_to_history(history, msg):
-  if len(history) == 3:
-    history.pop(0)
-  history.append(msg)
+  if msg not in history:
+    if len(history) == 3:
+      history.pop(0)
+    history.append(msg)
 
 
 def init_model():
-    GPIO.setmode(GPIO.BCM)
-    for pin in PIN_LIST:
-      GPIO.setup(pin, GPIO.OUT)
-    # init each sign
-    nonexit_signs = app.get_sign_ids()
-    for id in nonexit_signs:
-      path = app.shortest_path(id)
-      delta_dir = get_delta_dir(path)
-      if get_sign_dir(path) != delta_dir:
-        update_signals(app.set_direction(id, delta_dir)[0]['n'])
+  GPIO.setmode(GPIO.BCM)
+  for pin in PIN_LIST:
+    GPIO.setup(pin, GPIO.OUT)
+  # init each sign
+  nonexit_signs = app.get_sign_ids()
+  for id in nonexit_signs:
+    path = app.shortest_path(id)
+    delta_dir = get_delta_dir(path)
+    update_signals(app.set_direction(id, delta_dir)[0]['n'])
+  exit_signs = app.get_exit_ids()
+  for exit in exit_signs:
+    update_signals(exit)
 
 def get_sign_dir(path):
   return path[0]['path'][0]['dir']
 
 def get_delta_dir(path):
-  return path[0]['path'][2]['dir']
+  try:
+    return path[0]['path'][2]['dir']
+  except:
+    print(path)
+    raise IndexError
 
 def on(pin):
   if type(pin) == int and pin > 0:
@@ -52,7 +72,6 @@ def off(pin):
     GPIO.output(pin, GPIO.LOW)
 
 def update_signals(node):
-  print(node)
   dir = node['dir']
   q1 = node['q1']
   q2 = node['q2']
@@ -73,46 +92,56 @@ def update_signals(node):
   else: 
     raise AssertionError("invalid direction")
 
-try: 
-  uri = os.environ.get('NEO4J_URI')
-  user = os.environ.get('NEO4J_USERNAME')
-  password = os.environ.get('NEO4J_PASSWORD')
-  app = App(uri, user, password)
-  app.init_db() # TODO: remove for prod
+def on_connect(client, userdata, flags, rc):
   init_model()
-  time.sleep(30)
-  alarm_id = 5
-  app.set_fire(alarm_id)
-  add_to_history(left_history, "Fire detected by alarm " + str(alarm_id))
-  nonexit_signs = app.get_sign_ids()
-  for id in nonexit_signs:
-    path = app.shortest_path(id)
-    delta_dir = get_delta_dir(path)
-    sign_dir = get_sign_dir(path)
-    if sign_dir != delta_dir:
-      add_to_history(right_history, "Changing sign # " + str(id) + " " + sign_dir + "->" + delta_dir)
-      update_signals(app.set_direction(id, delta_dir)[0]['n'])
-  # display left history
+  print("connected...")
+  for t in SENSORS:
+    client.subscribe(t)
+
+def on_message(client, userdata, msg):
+  alarm_id = SENSORS[msg.topic]
+  print("Topic: ", msg.topic, msg.payload.decode("utf-8"))
+  m = msg.payload.decode("utf-8")
+  if not (m == "" or m == "nan") and float(m) >= HEAT_THRESH:
+    print("Triggered: ", msg.topic)
+    app.set_fire(alarm_id)
+    add_to_history(left_history, "Fire detected by sensor " + str(msg.topic[-1]))
+    nonexit_signs = app.get_sign_ids()
+    for id in nonexit_signs:
+      path = app.shortest_path(id)
+      delta_dir = get_delta_dir(path)
+      sign_dir = get_sign_dir(path)
+      if sign_dir != delta_dir:
+        add_to_history(right_history, "Changing sign # " + str(id) + " " + sign_dir + "->" + delta_dir)
+        update_signals(app.set_direction(id, delta_dir)[0]['n'])
+    screen.fill((0,0,0))
+    # display left history
     lefty = 20
     for msg in left_history:
       lefty += 20
       text_surface = my_font.render(msg, True, WHITE)
-      rect = text_surface.get_rect(center=(40, lefty))
+      rect = text_surface.get_rect(center=(70, lefty))
       screen.blit(text_surface, rect)
     # display right history
     righty = 20
-    for direction, start_time in right_history:
+    for msg in right_history:
       righty += 20
-      right_history_text = str(direction) + "       " + str(start_time)
-      text_surface = my_font.render(right_history_text, True, WHITE)
+      text_surface = my_font.render(msg, True, WHITE)
       rect = text_surface.get_rect(center=(230, righty))
       screen.blit(text_surface, rect)
     pygame.display.flip()
 
-  time.sleep(200)
+
+client.on_connect = on_connect
+client.on_message = on_message
+
+client.connect(mqtt_broker_ip, 1883)
+try:
+  client.loop_forever()
+  GPIO.cleanup()
+  app.close()
+  client.disconnect
 except KeyboardInterrupt:
   GPIO.cleanup()
   app.close()
-  raise KeyboardInterrupt("program ended")
-GPIO.cleanup()
-app.close()
+  
