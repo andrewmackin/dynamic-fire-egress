@@ -175,17 +175,10 @@
         this step.</p>
       <h3> Designing the Algorithm</h3>
       <div style="text-align: left">
-        <p>If there was one point in development of the non-networking software that presented
-          many issues, it was
-          developing the algorithm. It took quite a while to learn different aspects of the Cypher query language and to
-          get the correct results. For this, the <a href="https://neo4j.com/graphgists/santas-shortest-weighted-path/"
+        <p>For this, the <a href="https://neo4j.com/graphgists/santas-shortest-weighted-path/"
             target="_blank">Santa’s Shortest Weighted Path</a> blog post proved to be very helpful in
-          providing a baseline for the syntax. We also ran into issues trying to associate the edge “costs” (or physical
-          path distances) in nodes when running our query, but we got around this by storing costs in edges. Overall,
-          the
-          biggest issue we encountered in this step was ordering the syntax correctly, which merely took a lot of
-          research
-          and practice. Our algorithm for calculating the shortest path was as follows:</p>
+          providing a baseline for the syntax. We ran into issues trying to associate the edge “costs” (or physical
+          path distances) in nodes when running our query, but we got around this by storing costs in edges. Our algorithm for calculating the shortest path was as follows:</p>
         <code>MATCH path = (startSign:Sign WHERE startSign.id = $sign_id)-[:CONNECTED_TO*]->(exit:Exit) WHERE NONE
             (x in nodes(path) WHERE x:Fire) RETURN path ORDER BY REDUCE(dist = 0, rela in relationships(path) | dist + rela.cost) ASC LIMIT 1</code>
         <p>where $sign_id represents the identifier for a given Sign node. A breakdown of each step is as follows:</p>
