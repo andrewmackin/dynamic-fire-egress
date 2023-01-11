@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>Starter Template for Bootstrap</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+  <!-- <link href="../../assets/css/ie10-viewport-bug-workaround.css" rel="stylesheet"> -->
+
+  <!-- Custom styles for this template -->
+  <link href="styles/style.css" rel="stylesheet">
+
+  <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+  <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+  <!-- <script src="../../assets/js/ie-emulation-modes-warning.js"></script> -->
+
+  <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+  <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+
+  <nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+          aria-expanded="false" aria-controls="navbar">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">Dynamic Fire Egress</a>
+      </div>
+      <div id="navbar" class="collapse navbar-collapse">
+        <ul class="nav navbar-nav">
+          <li class="active"><a href="#">Home</a></li>
+          <li><a href="#obj">Project Objective</a></li>
+          <li><a href="#intro">Introduction</a></li>
+          <li><a href="#design">Design</a></li>
+          <li><a href="#testing">Testing</a></li>
+          <li><a href="#result">Result</a></li>
+          <li><a href="#conclusion">Conclusion</a></li>
+          <li><a href="#future-work">Future Work</a></li>
+          <li><a href="#budget">Budget</a></li>
+        </ul>
+      </div>
+      <!--/.nav-collapse -->
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <div class="starter-template">
+      <h1>Dynamic Fire Egress</h1>
+      <p class="lead">For finding the nearest exit when your building is on fire. <br>By: Andrew Mackin (ajm536), David
+        Chen (dc854), Hannah Goldstein (hlg66)</p>
+    </div>
+
+    <div style="text-align:center;">
+      <p style="text-align: left;padding: 0px 30px;">In this project, we simulated the spread of a fire in a building
+        and dynamically changed the direction of exit signs based on information on where the fire was. In this way, we
+        were able to provide egress routes that prevented individuals from walking through fire if possible.
+      </p>
+    </div>
+
+    <hr id='intro'>
+
+    <div style="text-align:center;">
+      <h2>Introduction</h2>
+      <p style="text-align: left;padding: 0px 30px;"> In case of an emergency, navigating to the nearest and safest
+        exit can prove to be
+        difficult when you are in an unfamiliar location or you don’t know the location of the nearest exit that
+        avoids the emergency event. The Emergency Egress System provides topological guidance to individuals in a
+        building to navigate to the nearest and safest emergency exit through the use of LED arrows attached to exit
+        signs. Through an expanded emergency exit sign design, the addition of arrows placed to the left and right of
+        the sign, individuals are able to receive real-time guidance for which exit(s) are on the shortest and safest
+        path out, and which exits are not.
+      </p>
+    </div>
+
+    <hr id='design'>
+
+    <div style="text-align:center;padding: 0px 30px;">
+      <h2>Design</h2>
+      <h3>Physical Model</h3>
+      <div style="text-align:center;">
+        <img class="img-rounded" src="pics/physical-model.png" style="width:75%;">
+        <p>Figure 1: The expected layout of the Exit signs is shown (left), with the top showing arrows pointing right
+          and bottom showing arrows pointing left. The produced physical model that was integrated with the physical
+          model is shown on the right.</p>
+      </div>
+      <p style="text-align:left;"> Each of the exit signs is composed of the total of 24 green LEDs
+        creating two X’s on mini breadboards. Each
+        X is composed of 12 LED’s configured in groups of three such that there is a square in the center of the X
+        made from four LED’s (one from each group of three). From this square, the triplets of LED’s are angled evenly
+        outward with right angles between each string of LEDs. Figure XX above shows the overall layout of the LEDs on
+        the breadboard used to create the Exit signs. Each triplet of LED’s was controlled by a separate GPIO pin
+        connected to the RPi4. Each triplet had to be controlled by a separate GPIO pin to avoid maxing out the
+        current that the GPIO pins could handle. In addition, because some of the signs never changed because they
+        were directly next to a physical exit, the required number of GPIO pins for the model was fewer - summing to a
+        total of 14 pins needed for this design (four for both central, navigational signs, and two for each of the
+        three physical exit signs)</p>
+      <h3>Structuring the Abstract Model</h3>
+      <div style="text-align:center;">
+        <img class="img-rounded" src="pics/abstract-model.png" style="width:75%;">
+        <p>Figure 2: The abstract representation of our demo model of Phillips Hall, Second Floor.</p>
+      </div>
+      <div style="text-align:left">
+        <p>
+          We used a graph with various types of nodes and edges to represent the building. We had 4 types of nodes:
+        <ul style="text-align:left">
+          <li>Exits: Nodes that represented an exit out of the building</li>
+          <li>Signs: Nodes that represented a physical sign that could be lit up</li>
+          <li>Alarms: Nodes that represented smoke alarms</li>
+          <li>Deltas: Intermediate nodes that represented whether a physical path could be safely traversed</li>
+        </ul>
+        </p>
+        <p>Some nodes, as can be seen in Figure 2, could be both exit and sign nodes if they had a physical sign and
+          represented an exit. Then, we had the following rules for edges:</p>
+        <ul style="text-align:left">
+          <li>A directed edge existed from an Alarm <b>a</b> to a Delta <b>a</b> if and only if fire detected by a
+            caused
+            the physical
+            path represented by <b>d</b> to be unsafe to traverse </li>
+          <li>A directed edge existed from Sign <b>s</b> to Delta <b>d</b> if and only if <b>s</b> was not an Exit and
+            <b>d</b> was a physically
+            directly connected path that could be traveled from s
+          </li>
+          <li>A directed edge existed from Delta <b>d</b> to Exit <b>e</b> if and only if <b>e</b> was a physically
+            directly connected path
+            that could be used to travel to <b>e</b></li>
+          <li>A directed edge existed from Delta <b>d</b> to Sign <b>s</b> if and only if each other Sign pointing to
+            <b>s</b> could route
+            people to face the front of <b>s</b> and <b>d</b> was a physically directly connected path that could be
+            used
+            to get to <b>s</b>
+          </li>
+          <li>Each Delta node can only have one incoming edge from a Sign node</li>
+          <li>Each Delta node can only have on outgoing edge</li>
+        </ul>
+        <p>Although in Figure 2, all non-exit Signs were directly connected to exits when ignoring Delta nodes, our
+          model and algorithm both supported passing multiple non-exit signs on the way to an exit. However, determining
+          the new directions would require some small modifications to our code if this were the case.
+          Lastly, edges from Delta nodes to Exit nodes carry the physical distance from the Sign incoming into a
+          respective Sign node to the respective Exit node. For the most part, this representation went smoothly,
+          although as further elaborated in <i>Designing the Algorithm</i>, encoding path lengths in Delta nodes was
+          problematic when calculating the shortest path.
+        </p>
+      </div>
+      <h3>Setting Up the Database</h3>
+      <p style="text-align: left">After quite a bit of research, we opted to use a Neo4j database to
+        store our graph data. Conveniently, we were
+        able to obtain a 30-day free development instance of Neo4j’s AuraDB that we could use to store our data and
+        connect remotely. Then, by installing the neo4j Python package using pip, we were able to interface with the
+        database remotely, allowing us to perform queries inside of our programs. Lastly, we were able to hide our
+        credentials to our database using a .env file that contained the credentials and then load those credentials as
+        environment variables using the os package in Python. It took awhile to figure out how to store our Neo4j
+        database but once we found AuraDB instances it became clear that it was what we wanted. We tested this step by
+        connecting to the database and then executing basic Cypher queries and examining the results in the terminal. It
+        was often evident if things were working correctly because verbose error messages would appear otherwise. The
+        sample code provided by Neo4j’s Python Developer Guide proved to be very useful for writing the Python code for
+        this step.</p>
+      <h3> Designing the Algorithm</h3>
+      <div style="text-align: left">
+        <p>If there was one point in development of the non-networking software that presented
+          many issues, it was
+          developing the algorithm. It took quite a while to learn different aspects of the Cypher query language and to
+          get the correct results. For this, the <a href="https://neo4j.com/graphgists/santas-shortest-weighted-path/"
+            target="_blank">Santa’s Shortest Weighted Path</a> blog post proved to be very helpful in
+          providing a baseline for the syntax. We also ran into issues trying to associate the edge “costs” (or physical
+          path distances) in nodes when running our query, but we got around this by storing costs in edges. Overall,
+          the
+          biggest issue we encountered in this step was ordering the syntax correctly, which merely took a lot of
+          research
+          and practice. Our algorithm for calculating the shortest path was as follows:</p>
+        <code>MATCH path = (startSign:Sign WHERE startSign.id = $sign_id)-[:CONNECTED_TO*]->(exit:Exit) WHERE NONE
+            (x in nodes(path) WHERE x:Fire) RETURN path ORDER BY REDUCE(dist = 0, rela in relationships(path) | dist + rela.cost) ASC LIMIT 1</code>
+        <p>where $sign_id represents the identifier for a given Sign node. A breakdown of each step is as follows:</p>
+        <ul>
+          <li><code>MATCH path = (startSign:Sign WHERE startSign.id = $sign_id)-[:CONNECTED_TO*]->(exit:Exit)</code>
+            <ul>
+              <li>Find all paths from a given Sign to an Exit of any length</li>
+            </ul>
+          </li>
+          <li><code>WHERE NONE(x in nodes(path) WHERE x:Fire)</code></li>
+          <ul>
+            <li>Ignore any paths where a (Delta) node has a Fire label associated with it</li>
+          </ul>
+          <li><code>RETURN path ORDER BY REDUCE(dist = 0, rela in relationships(path) | dist + rela.cost)</code></li>
+          <ul>
+            <li>Calculate the cost of each edge for a given path in the set of paths created by the query up to this
+              point</li>
+          </ul>
+          <li><code>ASC LIMIT 1</code></li>
+          <ul>
+            <li>Sort all the paths in ascending order by cost and take the first one (and then return it)</li>
+          </ul>
+        </ul>
+        <p>Then all we needed to do was compare the old direction to the one associated with the Delta node in the path
+          returned by the algorithm to determine if the direction of a sign needed to change. Correctness was evidenced
+          through manual testing of our model and by examining the output of the queries.</p>
+      </div>
+      <h3>Interfacing with the LED Signs</h3>
+      <p style="text-align:left">Performing this step of the project proved to be quite simple and we ran into no
+        significant issues. For each Sign, we added fields which contained the GPIO pin numbers for each quadrant in the
+        sign. Then, based on the direction calculated by the algorithm, we sent signals to the LED signs after
+        calculating which quadrants needed to be lit. Correctness was evident by simply trying different directions for
+        each sign. </p>
+      <h3>Networking with Sensors</h3>
+      <div style="text-align:center;">
+        <img class="img-rounded" src="pics/networking.png" style="width:75%;">
+        <p>Figure 3: Networking the Temperature Sensors</p>
+      </div>
+      <p style="text-align:left">To model the system, we wanted to have the temperature sensors alert the Raspberry Pi
+        when there is a fire
+        similar to how it would happen with a smoke detector and central monitoring system in an actual building.
+        We decided to use the Huzzah ESP8266 breakout which functioned as a networking chip which will relay the
+        information from the temperature sensor to the Raspberry Pi. We originally wanted to use HTTP requests, but it
+        was simpler
+        to use MQTT which was common in IoT devices where suscribers subscribe to certain topics to get certain
+        messages. In
+        this case, the Raspberry Pi would subscribe to the information from the individual temperature sensors as
+        different topics.</p>
+      <p style="text-align:left">We originally planned to have one networking chip per sensor, but it would end up being
+        too expensive and would
+        duplicate
+        a lot of the same work on each sensor. One problem we ended up having is we opted to use a cheaper temperature
+        sensor which also meant that there was no way to change the I2C address of the sensor. This meant that for the
+        single I2C channel on the HUZZAH,
+        we had to use a multiplexer, so that it could distinguish between the different sensors as shown in Figure 3.
+        This allows the chip to select which
+        I2C channel to read from the multiplexer and get the temperature reading for the appropriate sensor.
+      </p>
+
+      <hr id='testing'>
+      <h2>Testing</h2>
+      <p style="text-align: left;">In developing our project, we ran into a number of issues as the
+        result of using technologies for the first time and using unreliable parts. With a few minor exceptions, we were
+        able to meet all the deadlines we set for ourselves. Oftentimes, the correctness of our sprints was evidenced by
+        trivial manual use, although as we put different parts of our project together, we had to manually test
+        different patterns of inputs more thoroughly. </p>
+      <p style="text-align: left;">In addition, the hardware components were somewhat unreliable such
+        as the temperature sensors
+        and the I2C multiplexer. Originally, the I2C multiplexer was not working, and it was unable to relay the switch
+        between the different I2C channels, so we had to use a different one. In addition, the temperature sensors were
+        pretty cheap, so they were somewhat unrealiable in giving readings. There were also many parts that had to be
+        connected with wires and unseen loose connections were contributing to the problems we had with the hardware.
+        Overall, we were able to test the individual components of the system in isolation first. The networking
+        component was tested to see if it could send messages to the Raspberry Pi, the abstract model was checked to see
+        if it was generating the correct path based on given inputs, and the LED signs were tested to see if they were
+        lighting up correctly. Afterwards, we combined all our different parts to see if all the components worked
+        together on our physical model. We were able to see the temperature sensors sending the signal to the Raspberry
+        Pi which then controlled the different LEDs to change direction based on the temperature. We concluded our
+        testing by ensuring that the paths were changing in the correct manner based on the LEDs and temperature
+        readings.</p>
+    </div>
+
+    <hr id='result'>
+
+    <div style="text-align:center;">
+      <h2>Result</h2>
+      <p style="text-align: left;padding: 0px 30px;">All aspects of the project performed as planned in the end. Along
+        the way, there were some difficulties and abnormal behavior resulting from either hardware or software issues
+        (i.e. dead multiplexer, wires not fully connected/ connected incorrectly, and incorrect entries in the
+        database). However, these were resolved and the goals outlined in the description were eventually met. We were
+        able to successfully create a model of a building and demonstrate how a dynamic egress system would work to
+        change
+        exit sign directions based on temperature sensors being triggered.
+      </p>
+    </div>
+
+    <hr id='conclusion'>
+
+    <div style="text-align:center;">
+      <h2>Conclusion</h2>
+      <p style="text-align: left;padding: 0px 30px;"> Our project was able to model how a dynamic egress system would
+        work. It was able to demonstrate what such a system would look like and how it would work. We didn't really run
+        into any specific issues that showed that it didn't work. The model was not as complex as how a real building is
+        laid out as it only demonstrates the basic components of a system. However, it was able to demonstrate the
+        usefulness of such a system on a small scale model that can be extended into a more detailed one.
+      </p>
+    </div>
+    <hr id='future-work'>
+
+    <div style="text-align:center;">
+      <h2>Future Work</h2>
+      <p style="text-align: left;padding: 0px 30px;"> For future work, trying models to add more complex paths to the
+        exits (multiple intermediary signs, for example) and larger data would be an option. In addition, displaying the
+        path on the piTFT screen for a visual layout would also be an ideal extension for more complex buildings. In
+        addition, interfacing between either the heat sensors or the exit signs wirelessly would also increase the
+        usability and reduce the number of hardware issues that were encountered. Furthermore, incorporating paths from
+        multiple floors and buildings with more complex layouts would allow for the expansion of the project and the
+        development of a design that could be incorporated into any building just using the location of sensors, signs,
+        and exits. With this increased complexity in floors and buildings, investigating how to leverage the carrying
+        capacity of hallways and to reduce congestion for larger buildings is also a future consideration.
+      </p>
+    </div>
+
+    <hr id='budget'>
+
+    <div style="text-align:center;">
+      <h2>Budget</h2>
+      <p style="text-align: left;padding: 0px 30px;">
+      <ul style="text-align: left;">
+        <li>From Lab:</li>
+        <ul>
+          <li>Raspberry Pi</li>
+          <li>Breadboards</li>
+          <li>Green LEDs (120 count)</li>
+        </ul>
+        <li>Purchased Components (on our behalf):</li>
+        <ul>
+          <li><a href=" https://www.adafruit.com/product/2471" target="_blank">HUZZAH ESP8266 Breakout </a> - $9.95
+          </li>
+          <li><a href="https://www.adafruit.com/product/2717/" target="_blank">TCA9548A 1-to-8 I2C Multiplexer</a> -
+            $6.95</li>
+          <li><a href="https://www.adafruit.com/product/3721" target="_blank">AM2320 Temperature Sensors </a> x 3 -
+            #3.95 x 3 = $11.85</li>
+        </ul>
+        <li>Other Components:</li>
+        <ul>
+          <li>Cardboard</li>
+        </ul>
+        <li>Total: $28.75</li>
+      </ul>
+      </p>
+    </div>
+
+    <hr>
+
+    <div class="row" style="text-align:center;">
+      <h2>Work Distribution</h2>
+      <div style="text-align:center;">
+        <img class="img-rounded" src="pics/group.png" style="width:80%;">
+        <h4>We forgot to take a picture together, so this is the best we could do.</h4>
+      </div>
+      <div class="row" style="text-align:center">
+        <div class="col-sm-4" style="font-size:16px">
+          <img class="img-rounded" src="pics/andrew.jpg" width="200" height="200">
+          <h3>Andrew Mackin</h3>
+          <p class="lead">ajm536@cornell.edu</p>
+          <p>Created the abstract model and the algorithm to calculate the shortest path for each node.</p>
+        </div>
+        <div class="col-sm-4" style="font-size:16px">
+          <img class="img-rounded" src="pics/david.jpg" width="200" height="200">
+          <h3>David Chen</h3>
+          <p class="lead">dc854@cornell.edu</p>
+          <p>Created the networking system for the sensors and set up the server on the Raspberry Pi.</p>
+        </div>
+        <div class="col-sm-4" style="font-size:16px">
+          <img class="img-rounded" src="pics/hannah.png" width="200" height="200">
+          <h3>Hannah Goldstein</h3>
+          <p class="lead">hlg66@cornell.edu</p>
+          <p>Created the LED displays for exit signs and the physical model of the building.</p>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+    <div style="font-size:18px">
+      <h2>References</h2>
+      <a href="https://neo4j.com/graphgists/santas-shortest-weighted-path/" target="_blank">Shortest Path Blog</a><br>
+      <a href="https://neo4j.com/developer/python/" target="_blank">Using Neo4j in Python</a><br>
+      <a href="https://learn.adafruit.com/adafruit-huzzah-esp8266-breakout/pinouts">HUZZAH ESP8266 Documentation</a><br>
+      <a href="https://learn.adafruit.com/adafruit-am2320-temperature-humidity-i2c-sensor/pinouts"
+        target="_blank">AM2320 Temperature
+        Sensor Documentation</a><br>
+      <a href="https://learn.adafruit.com/adafruit-tca9548a-1-to-8-i2c-multiplexer-breakout/pinouts"
+        target="_blank">TCA9548A I2C
+        Multiplexer Documentation</a><br>
+      <a href="https://www.instructables.com/How-to-Use-MQTT-With-the-Raspberry-Pi-and-ESP8266/" target="_blank">MQTT
+        Networking
+        Guide</a>
+
+    </div>
+
+    <hr>
+
+    <div class="row">
+      <h2>Code Appendix</h2>
+      <p>The most updated code can be found on the <a href="https://github.com/dc854/fire-egress"
+          target="_blank">Github</a> for this project :)</p>
+
+    </div><!-- /.container -->
+
+
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
+    <script src="dist/js/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <!-- <script src="../../assets/js/ie10-viewport-bug-workaround.js"></script> -->
+</body>
+
+</html>
